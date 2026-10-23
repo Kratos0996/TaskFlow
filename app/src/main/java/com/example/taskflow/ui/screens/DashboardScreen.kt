@@ -5,7 +5,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -26,25 +25,16 @@ import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.NotificationsNone
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,7 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.taskflow.model.TaskPriority
+import com.example.taskflow.ui.components.NewTaskForm
 import com.example.taskflow.ui.components.StatsRow
 import com.example.taskflow.ui.components.TaskCard
 import com.example.taskflow.ui.theme.Coral
@@ -145,12 +135,12 @@ fun DashboardScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text("Weekly progress", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                                Text("7 of 12 tasks completed", color = Color.White.copy(alpha = 0.76f), fontSize = 11.sp)
+                                Text("${viewModel.completedTasksCount} of ${viewModel.totalTasksCount} tasks completed", color = Color.White.copy(alpha = 0.76f), fontSize = 11.sp)
                             }
-                            Text("58%", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                            Text("${viewModel.progressPercentage}%", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 22.sp)
                         }
                         LinearProgressIndicator(
-                            progress = { 7f / 12f },
+                            progress = { viewModel.progressFraction },
                             modifier = Modifier.fillMaxWidth().clip(CircleShape),
                             color = Mint,
                             trackColor = Color.White.copy(alpha = 0.22f)
@@ -164,7 +154,11 @@ fun DashboardScreen(
                         Spacer(Modifier.weight(1f))
                         Text("This week  ˅", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                     }
-                    StatsRow()
+                    StatsRow(
+                        totalCount = viewModel.totalTasksCount,
+                        pendingCount = viewModel.pendingTasksCount,
+                        completedCount = viewModel.completedTasksCount
+                    )
                 }
 
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -233,87 +227,13 @@ fun DashboardScreen(
         )
 
         if (showAddDialog) {
-            AddTaskBottomSheet(
+            NewTaskForm(
                 onDismiss = { viewModel.showAddDialog = false },
                 onAddTask = { title, category, priority ->
                     viewModel.addTask(title, category, priority)
                     viewModel.showAddDialog = false
                 }
             )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AddTaskBottomSheet(
-    onDismiss: () -> Unit,
-    onAddTask: (String, String, TaskPriority) -> Unit
-) {
-    val sheetState = rememberModalBottomSheetState()
-    var title by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("Work") }
-    var priority by remember { mutableStateOf(TaskPriority.MEDIUM) }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp)
-                .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text("Nueva tarea", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("Título de la tarea") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp)
-            )
-
-            OutlinedTextField(
-                value = category,
-                onValueChange = { category = it },
-                label = { Text("Categoría (ej. Work, Personal)") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp)
-            )
-
-            Text("Prioridad:", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                TaskPriority.entries.forEach { p ->
-                    FilterChip(
-                        selected = priority == p,
-                        onClick = { priority = p },
-                        label = { Text(p.name) }
-                    )
-                }
-            }
-
-            Spacer(Modifier.size(8.dp))
-
-            Button(
-                onClick = {
-                    if (title.isNotBlank()) {
-                        onAddTask(title.trim(), category.trim().ifBlank { "Work" }, priority)
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                contentPadding = PaddingValues(vertical = 14.dp)
-            ) {
-                Text("Agregar tarea", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            }
         }
     }
 }

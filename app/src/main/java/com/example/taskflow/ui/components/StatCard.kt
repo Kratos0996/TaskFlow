@@ -2,6 +2,7 @@ package com.example.taskflow.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,9 +25,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.taskflow.ui.theme.Amber
 import com.example.taskflow.ui.theme.Indigo
 import com.example.taskflow.ui.theme.Mint
-import com.example.taskflow.ui.theme.Amber
 
 @Composable
 fun StatCard(label: String, value: String, icon: ImageVector, accent: Color) {
@@ -51,19 +52,19 @@ fun StatCard(label: String, value: String, icon: ImageVector, accent: Color) {
 }
 
 @Composable
-fun StatsRow() {
+fun StatsRow(totalCount: Int, pendingCount: Int, completedCount: Int) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        androidx.compose.foundation.layout.Box(Modifier.weight(1f)) {
-            StatCard("Total tasks", "12", Icons.Outlined.TaskAlt, Indigo)
+        Box(Modifier.weight(1f)) {
+            StatCard("Total tasks", totalCount.toString(), Icons.Outlined.TaskAlt, Indigo)
         }
-        androidx.compose.foundation.layout.Box(Modifier.weight(1f)) {
-            StatCard("Pending", "5", Icons.Outlined.PendingActions, Amber)
+        Box(Modifier.weight(1f)) {
+            StatCard("Pending", pendingCount.toString(), Icons.Outlined.PendingActions, Amber)
         }
-        androidx.compose.foundation.layout.Box(Modifier.weight(1f)) {
-            StatCard("Completed", "7", Icons.Outlined.CheckCircle, Mint)
+        Box(Modifier.weight(1f)) {
+            StatCard("Completed", completedCount.toString(), Icons.Outlined.CheckCircle, Mint)
         }
     }
 }

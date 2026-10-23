@@ -26,6 +26,12 @@ class TaskViewModel : ViewModel() {
             TaskFilter.COMPLETADAS -> _tasks.filter { it.status == TaskStatus.COMPLETED }
         }
 
+    val totalTasksCount: Int get() = _tasks.size
+    val completedTasksCount: Int get() = _tasks.count { it.status == TaskStatus.COMPLETED }
+    val pendingTasksCount: Int get() = _tasks.count { it.status == TaskStatus.TODO || it.status == TaskStatus.IN_PROGRESS }
+    val progressFraction: Float get() = if (_tasks.isNotEmpty()) completedTasksCount.toFloat() / _tasks.size.toFloat() else 0f
+    val progressPercentage: Int get() = if (_tasks.isNotEmpty()) (completedTasksCount * 100) / _tasks.size else 0
+
     fun addTask(title: String, category: String, priority: TaskPriority) {
         val newId = (_tasks.maxOfOrNull { it.id } ?: 0) + 1
         val newItem = TaskItem(
