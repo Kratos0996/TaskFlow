@@ -92,6 +92,7 @@ fun NewTaskForm(
                         onAddTask(title.trim(), category.trim().ifBlank { "Work" }, priority)
                     }
                 },
+                enabled = title.isNotBlank(),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 contentPadding = PaddingValues(vertical = 14.dp)

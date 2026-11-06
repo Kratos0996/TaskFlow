@@ -1,10 +1,12 @@
 package com.example.taskflow.viewModel
 
+import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
+import com.example.taskflow.data.TaskLocalStorage
 import com.example.taskflow.data.sampleTasks
 import com.example.taskflow.model.TaskItem
 import com.example.taskflow.model.TaskPriority
@@ -12,8 +14,18 @@ import com.example.taskflow.model.TaskStatus
 
 enum class TaskFilter { TODAS, PENDIENTES, COMPLETADAS }
 
-class TaskViewModel : ViewModel() {
-    private val _tasks = mutableStateListOf<TaskItem>().apply { addAll(sampleTasks) }
+class TaskViewModel(application: Application) : AndroidViewModel(application) {
+    private val storage = TaskLocalStorage(application)
+
+    private val _tasks = mutableStateListOf<TaskItem>().apply {
+        val loaded = storage.loadTasks()
+        if (!loaded.isNullOrEmpty()) {
+            addAll(loaded)
+        } else {
+            addAll(sampleTasks)
+        }
+    }
+
     val tasks: List<TaskItem> get() = _tasks
 
     var selectedFilter by mutableStateOf(TaskFilter.TODAS)
@@ -31,6 +43,10 @@ class TaskViewModel : ViewModel() {
     val pendingTasksCount: Int get() = _tasks.count { it.status == TaskStatus.TODO || it.status == TaskStatus.IN_PROGRESS }
     val progressFraction: Float get() = if (_tasks.isNotEmpty()) completedTasksCount.toFloat() / _tasks.size.toFloat() else 0f
     val progressPercentage: Int get() = if (_tasks.isNotEmpty()) (completedTasksCount * 100) / _tasks.size else 0
+
+    private fun persist() {
+        storage.saveTasks(_tasks)
+    }
 
     fun addTask(title: String, category: String, priority: TaskPriority) {
         val newId = (_tasks.maxOfOrNull { it.id } ?: 0) + 1
@@ -50,16 +66,19 @@ class TaskViewModel : ViewModel() {
             }
         )
         _tasks.add(newItem)
+        persist()
     }
 
     fun updateTaskStatus(taskId: Int, newStatus: TaskStatus) {
         val index = _tasks.indexOfFirst { it.id == taskId }
         if (index != -1) {
             _tasks[index] = _tasks[index].copy(status = newStatus)
+            persist()
         }
     }
 
     fun deleteTask(taskId: Int) {
         _tasks.removeIf { it.id == taskId }
+        persist()
     }
 }
